@@ -14,7 +14,7 @@
 
         resolver(resolve, reject);   // 执行参数函数，并传递 resolve和 reject函数的地址到参数函数内部
 
-        function next(state, val) {  // 执行 resolve或者 reject之后，next会把处理函数放到事件队列里(setTimeout(fn,0)的小技巧)，直到所有的then方法的回调压入queue（栈的使用）。
+        function next(state, val) {  // 执行 resolve或者 reject之后，next会把处理函数放到事件队列里(setTimeout(fn,0)的小技巧)，直到所有的then方法的回调压入queue（栈的使用）。 
             var arr;
             var chainRs;
 
