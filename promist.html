@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+    function Promise(resolver) {
+
+        var queue = []; // then方法的函数地址会都放在这里
+
+        resolver(resolve, reject);   // 执行参数函数，并传递 resolve和 reject函数的地址到参数函数内部
+
+        function next(state, val) {  // 执行 resolve或者 reject之后，next会把处理函数放到事件队列里(setTimeout(fn,0)的小技巧)，直到所有的then方法的回调压入queue（栈的使用）。
+            var arr;
+            var chainRs;
+
+            setTimeout(function() {
+                if (arr = queue.shift()) {   // 从数组获取执行函数的地址
+                    chainRs = arr[state](val);  // 执行
+                    if (!chainRs) return;
+                    //某一个resolve函数返回的又是一个Promise对象
+                    if (chainRs && typeof chainRs.then == 'function') {
+                        chainRs.then(resolve, reject);
+                    } else {
+                        //resolve函数返回一个普通的值
+                        resolve(chainRs) 
+                    }
+                }
+            }, 0);
+        }
+
+        function resolve(x) { 
+            next(0, x);
+        }
+
+        function reject(reasion) {
+            next(1, reasion);
+        }
+
+        this.then = function(resolve, reject) {  // 压入数组队列
+            queue.push([resolve, reject]);
+        }
+    }
+
+    var p = new Promise(function(resolve, reject) {
+        resolve('ok1');
+    }).then(function() {
+        console.log('ok2');
+    });
+
+    </script>
+</body>
+
+</html>
