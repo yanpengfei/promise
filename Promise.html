@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Promise简单实现</title>
+</head>
+
+<body>
+    <script>
+    // 程序执行步骤如下，步骤八完毕主程序执行完毕，then方法的执行是通过事件队列实现的。
+
+    function Promise(resolver) {
+
+        var queue = []; // then方法的函数地址会都放在这里
+
+
+        // 程序执行步骤二
+        resolver(resolve, reject); // 执行参数函数，并传递 resolve和 reject函数的地址到参数函数内部
+
+        // 程序执行步骤五
+        function next(state, val) { // 执行 resolve或者 reject之后，next会把处理函数放到事件队列里(setTimeout(fn,0)的小技巧)，直到所有的then方法的回调压入queue（栈的使用）。 
+            var arr;
+            var chainRs;
+
+            setTimeout(function() {
+                if (arr = queue.shift()) { // 从数组获取执行函数的地址
+                    chainRs = arr[state](val); // 执行
+                    if (!chainRs) return this;
+                    //某一个resolve函数返回的又是一个Promise对象
+                    if (chainRs && typeof chainRs.then == 'function') {
+                        chainRs.then(resolve, reject);
+                    } else {
+                        //resolve函数返回一个普通的值
+                        resolve(chainRs)
+                    }
+                }
+            }, 0);
+        }
+
+        function resolve(x) { // 程序执行步骤四
+            next(0, x);
+        }
+
+        function reject(reasion) {
+            next(1, reasion);
+        }
+
+        // 程序执行步骤七
+        this.then = function(resolve, reject) { // 压入数组队列
+            queue.push([resolve, reject]);
+            return this;   // 返回promise对象，实现链式调用
+        }
+    }
+
+    // resolve的快捷方式
+   Promise.resolve = function(x){
+    	return new Promise(function(resolve){
+    		resolve(x);
+    	});
+    }
+
+    // 第一种是用方式
+    var p = new Promise(function(resolve, reject) { // 程序执行步骤一
+            // 程序执行步骤三
+            console.log('ok0');
+            resolve('ok1'); 
+    })
+    .then(function(data) {  // 程序执行步骤六
+        console.log(data);  // 程序执行步骤9
+        return new Promise(function(res, rej){
+        	res(data);
+        });
+    })
+    .then(function(data){  // 程序执行步骤八
+    	console.log(data);  // 程序执行步骤10
+    });
+
+    // 第一种的快捷方式
+    Promise.resolve('ok')
+    .then(function(data) {  
+        console.log(data);  
+        return new Promise(function(res, rej){
+        	res(data);
+        });
+    })
+    .then(function(data){  
+    	console.log(data);  
+    });
+    </script>
+</body>
+
+</html>
